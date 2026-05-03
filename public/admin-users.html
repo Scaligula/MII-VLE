@@ -125,6 +125,7 @@
     <a class="nav-item" href="admin-dashboard.html"><span class="nav-icon">⊞</span> Dashboard</a>
     <a class="nav-item active" href="admin-users.html"><span class="nav-icon">👥</span> User Management</a>
     <a class="nav-item" href="admin-students.html"><span class="nav-icon">🧒</span> Students</a>
+    <a class="nav-item" href="admin-courses.html"><span class="nav-icon">📖</span> Courses</a>
     <a class="nav-item" id="adminMgmtNav" href="admin-admins.html" style="display: none;"><span class="nav-icon">👑</span> Admin Management</a>
     <div class="nav-divider"></div>
     <div class="nav-section-label">Account</div>
@@ -140,7 +141,7 @@
         <h1>User Management</h1>
         <p>Manage students, faculty, and system accounts</p>
       </div>
-      <button class="btn btn-primary" onclick="openCreateModal()">➕ New Account</button>
+      <button id="actionButton" class="btn btn-primary" onclick="handleActionButton()">➕ New Account</button>
     </div>
 
     <!-- Tab Bar -->
@@ -454,6 +455,25 @@ function switchTab(tab) {
     document.getElementById('tab-' + t).classList.toggle('active', t === tab);
     document.getElementById('panel-' + t).classList.toggle('hidden', t !== tab);
   });
+
+  // Update button based on active tab
+  const actionBtn = document.getElementById('actionButton');
+  if (tab === 'students') {
+    actionBtn.textContent = '➕ New Student';
+    actionBtn.onclick = () => openCreateModalForType('student');
+  } else if (tab === 'faculty') {
+    actionBtn.textContent = '➕ New Faculty';
+    actionBtn.onclick = () => openCreateModalForType('staff');
+  } else if (tab === 'accounts') {
+    actionBtn.textContent = '➕ New Account';
+    actionBtn.onclick = () => openCreateModal();
+  }
+}
+
+function handleActionButton() {
+  // This function is called by the button, but the actual onclick is set by switchTab
+  // This is a fallback
+  openCreateModal();
 }
 
 // ── Search filter ─────────────────────────────────────────────────────────
@@ -663,6 +683,16 @@ function openCreateModal() {
   document.getElementById('createError').classList.remove('show');
   openModal('createModal');
   switchTab('accounts');
+}
+
+function openCreateModalForType(role) {
+  document.getElementById('createName').value = '';
+  document.getElementById('createEmail').value = '';
+  document.getElementById('createRole').value = role;
+  document.getElementById('createLanguage').value = 'English';
+  document.getElementById('createError').classList.remove('show');
+  openModal('createModal');
+  // Don't switch tab - stay on current tab
 }
 
 async function createAccount() {

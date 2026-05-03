@@ -110,6 +110,7 @@
       <a class="nav-item" href="admin-dashboard.html" style="display: flex; align-items: center; gap: 0.65rem; padding: 0.5rem 1rem; color: var(--text-muted); font-size: 0.84rem; font-weight: 500; cursor: pointer; border-radius: 0; transition: all 0.15s; border-left: 2px solid transparent;"><span style="font-size: 1rem; width: 18px; text-align: center;">⊞</span> Dashboard</a>
       <a class="nav-item" href="admin-users.html" style="display: flex; align-items: center; gap: 0.65rem; padding: 0.5rem 1rem; color: var(--text-muted); font-size: 0.84rem; font-weight: 500; cursor: pointer; border-radius: 0; transition: all 0.15s; border-left: 2px solid transparent;"><span style="font-size: 1rem; width: 18px; text-align: center;">👥</span> User Management</a>
       <a class="nav-item active" href="admin-students.html" style="display: flex; align-items: center; gap: 0.65rem; padding: 0.5rem 1rem; background: var(--green-dim); color: #8ecf8e; font-size: 0.84rem; font-weight: 500; cursor: pointer; border-radius: 0; transition: all 0.15s; border-left: 2px solid var(--green);"><span style="font-size: 1rem; width: 18px; text-align: center;">🧒</span> Students</a>
+      <a class="nav-item" href="admin-courses.html" style="display: flex; align-items: center; gap: 0.65rem; padding: 0.5rem 1rem; color: var(--text-muted); font-size: 0.84rem; font-weight: 500; cursor: pointer; border-radius: 0; transition: all 0.15s; border-left: 2px solid transparent;"><span style="font-size: 1rem; width: 18px; text-align: center;">📖</span> Courses</a>
       <a class="nav-item" id="adminMgmtNav" href="admin-admins.html" style="display: none; align-items: center; gap: 0.65rem; padding: 0.5rem 1rem; color: var(--text-muted); font-size: 0.84rem; font-weight: 500; cursor: pointer; border-radius: 0; transition: all 0.15s; border-left: 2px solid transparent;"><span style="font-size: 1rem; width: 18px; text-align: center;">👑</span> Admin Management</a>
       <div style="height: 1px; background: var(--border); margin: 0.5rem 0;"></div>
       <div class="nav-section-label">Account</div>
@@ -190,7 +191,9 @@
           <div class="form-row">
             <div class="form-group">
               <label>Course *</label>
-              <input type="text" id="course" required>
+              <select id="course" required>
+                <option value="">-- Select a Course --</option>
+              </select>
             </div>
             <div class="form-group">
               <label>Grade *</label>
@@ -225,7 +228,7 @@
             </div>
             <div class="form-group">
               <label>Guardian Contact Number *</label>
-              <input type="text" id="guardianContactNumber" required placeholder="+1 (555) 000-0000">
+              <input type="text" id="guardianContactNumber" required placeholder="+63 (9xx) xxx-xxxx">
             </div>
           </div>
 
@@ -265,6 +268,29 @@
   <script>
     let currentStudentId = null;
     let allStudents = [];
+    let allCourses = [];
+
+    async function loadCourses() {
+      try {
+        const res = await fetch('/api/admin/courses', {
+          headers: { 'Accept': 'application/json' }
+        });
+        if (!res.ok) throw new Error('Failed to load courses');
+        allCourses = await res.json();
+        
+        // Populate course dropdown
+        const courseSelect = document.getElementById('course');
+        courseSelect.innerHTML = '<option value="">-- Select a Course --</option>';
+        allCourses.forEach(course => {
+          const option = document.createElement('option');
+          option.value = course._id;
+          option.textContent = course.name;
+          courseSelect.appendChild(option);
+        });
+      } catch (err) {
+        console.error('Error loading courses:', err);
+      }
+    }
 
     async function loadStudents() {
       try {
@@ -318,6 +344,7 @@
       currentStudentId = null;
       document.getElementById('studentModalTitle').textContent = 'Add New Student';
       document.getElementById('studentForm').reset();
+      loadCourses(); // Load courses when opening modal
       document.getElementById('studentModal').classList.add('open');
     }
 
@@ -334,13 +361,30 @@
     async function handleSaveStudent(event) {
       event.preventDefault();
 
+      // Get course name from selected course ID
+      const courseId = document.getElementById('course').value;
+      const selectedCourse = allCourses.find(c => c._id === courseId);
+      
+      if (!courseId) {
+        alert('Please select a course');
+        return;
+      }
+
+      const guardianContactNumber = document.getElementById('guardianContactNumber').value;
+      
+      // Validate guardian contact number starts with +63
+      if (!guardianContactNumber.startsWith('+63')) {
+        alert('Guardian contact number must start with +63');
+        return;
+      }
+
       const studentData = {
         firstName: document.getElementById('firstName').value,
         middleName: document.getElementById('middleName').value,
         lastName: document.getElementById('lastName').value,
         suffix: document.getElementById('suffix').value,
         studentId: document.getElementById('studentId').value,
-        course: document.getElementById('course').value,
+        course: selectedCourse ? selectedCourse.name : courseId,
         grade: document.getElementById('grade').value
       };
 
@@ -349,7 +393,7 @@
         middleName: document.getElementById('guardianMiddleName').value,
         lastName: document.getElementById('guardianLastName').value,
         suffix: document.getElementById('guardianSuffix').value,
-        contactNumber: document.getElementById('guardianContactNumber').value,
+        contactNumber: guardianContactNumber,
         email: document.getElementById('guardianEmail').value
       };
 
@@ -368,7 +412,10 @@
           body: JSON.stringify({ student: studentData, guardian: guardianData })
         });
 
-        if (!res.ok) throw new Error('Failed to save student');
+        if (!res.ok) {
+          const error = await res.json();
+          throw new Error(error.error || 'Failed to save student');
+        }
 
         closeStudentModal();
         await loadStudents();
@@ -438,8 +485,19 @@
         document.getElementById('lastName').value = student.lastName;
         document.getElementById('suffix').value = student.suffix || '';
         document.getElementById('studentId').value = student.studentId;
-        document.getElementById('course').value = student.course;
         document.getElementById('grade').value = student.grade;
+
+        // Load courses and set the selected one
+        await loadCourses();
+        const courseSelect = document.getElementById('course');
+        // Find the course ID by name
+        const selectedCourse = allCourses.find(c => c.name === student.course);
+        if (selectedCourse) {
+          courseSelect.value = selectedCourse._id;
+        } else {
+          // If course not found in list, add it as an option with the name as value
+          courseSelect.value = student.course;
+        }
 
         if (student.guardians?.length) {
           const guardian = student.guardians[0];
@@ -488,6 +546,7 @@
 
     // Initialize
     loadStudents();
+    loadCourses();
     initializeRoleBasedNav('admin');
   </script>
 </body>

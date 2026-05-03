@@ -97,32 +97,14 @@ async function seed() {
     subject: 'Quran',
     teacher: staff1._id,
     students: [dale._id, student2._id, student3._id],
-    courseOutline: [
-      { title: 'Introduction to Tajweed', content: 'Overview of Tajweed rules and importance', order: 1 },
-      { title: 'Makharij al-Huruf', content: 'Points of articulation for Arabic letters', order: 2 },
-      { title: 'Noon Sakinah Rules', content: 'Idgham, Ikhfa, Izhar, Iqlab', order: 3 },
-    ],
-    treeView: [
-      { title: 'Chapter 1: Foundations', children: [{ title: 'What is Tajweed?', type: 'lesson', content: 'Tajweed definition and history' }, { title: 'Arabic Alphabet Review', type: 'lesson', content: 'Review of all Arabic letters' }] },
-      { title: 'Chapter 2: Rules', children: [{ title: 'Noon Sakinah', type: 'lesson', content: 'Rules for Noon Sakinah' }, { title: 'Meem Sakinah', type: 'lesson', content: 'Rules for Meem Sakinah' }] },
-    ],
   });
 
   const mathCourse = await Course.create({
-    name: 'Mathematics Grade 7',
+    name: 'Mathematics',
     description: 'Covers algebra, geometry and number theory.',
     subject: 'Mathematics',
     teacher: staff2._id,
     students: [dale._id, student2._id, student3._id],
-    courseOutline: [
-      { title: 'Number Systems', content: 'Integers, Fractions, Decimals', order: 1 },
-      { title: 'Algebra Basics', content: 'Variables, Expressions, Equations', order: 2 },
-      { title: 'Geometry', content: 'Shapes, Area, Volume', order: 3 },
-    ],
-    treeView: [
-      { title: 'Unit 1: Numbers', children: [{ title: 'Integers', type: 'lesson', content: 'Positive and negative integers' }, { title: 'Fractions', type: 'lesson', content: 'Adding and subtracting fractions' }] },
-      { title: 'Unit 2: Algebra', children: [{ title: 'Variables', type: 'lesson', content: 'Introduction to variables' }, { title: 'Equations', type: 'lesson', content: 'Solving one-step equations' }] },
-    ],
   });
 
   const arabicCourse = await Course.create({
@@ -131,38 +113,73 @@ async function seed() {
     subject: 'Arabic',
     teacher: staff1._id,
     students: [dale._id, student3._id],
-    courseOutline: [
-      { title: 'Arabic Alphabet', content: 'Letters and their forms', order: 1 },
-      { title: 'Basic Vocabulary', content: 'Common words and phrases', order: 2 },
-    ],
-    treeView: [
-      { title: 'Chapter 1: Alphabet', children: [{ title: 'Letters 1-14', type: 'lesson', content: 'First half of Arabic alphabet' }, { title: 'Letters 15-28', type: 'lesson', content: 'Second half of Arabic alphabet' }] },
-    ],
+  });
+
+  const englishCourse = await Course.create({
+    name: 'English Language',
+    description: 'Develop English reading, writing, and communication skills.',
+    subject: 'English',
+    teacher: staff2._id,
+    students: [dale._id, student2._id, student3._id],
+  });
+
+  const scienceCourse = await Course.create({
+    name: 'Science',
+    description: 'General Science covering biology, chemistry, and physics concepts.',
+    subject: 'Science',
+    teacher: staff2._id,
+    students: [dale._id, student2._id, student3._id],
+  });
+
+  const hadithCourse = await Course.create({
+    name: 'Hadith Studies',
+    description: 'Study of authentic prophetic traditions and their applications.',
+    subject: 'Hadith',
+    teacher: staff1._id,
+    students: [dale._id, student2._id],
+  });
+
+  const fiqhCourse = await Course.create({
+    name: 'Fiqh - Islamic Jurisprudence',
+    description: 'Study of Islamic law and principles of jurisprudence.',
+    subject: 'Fiqh',
+    teacher: staff1._id,
+    students: [dale._id, student3._id],
   });
 
   console.log('Courses created');
 
   // Enroll students
-  dale.enrolledCourses = [quranCourse._id, mathCourse._id, arabicCourse._id];
+  dale.enrolledCourses = [quranCourse._id, mathCourse._id, arabicCourse._id, englishCourse._id, scienceCourse._id, hadithCourse._id, fiqhCourse._id];
   dale.grades = [
     { course: quranCourse._id, subject: 'Quran', grade: '92' },
     { course: mathCourse._id, subject: 'Mathematics', grade: '88' },
     { course: arabicCourse._id, subject: 'Arabic', grade: '74' },
+    { course: englishCourse._id, subject: 'English', grade: '85' },
+    { course: scienceCourse._id, subject: 'Science', grade: '82' },
+    { course: hadithCourse._id, subject: 'Hadith', grade: '90' },
+    { course: fiqhCourse._id, subject: 'Fiqh', grade: '88' },
   ];
   await dale.save();
 
-  student2.enrolledCourses = [quranCourse._id, mathCourse._id];
+  student2.enrolledCourses = [quranCourse._id, mathCourse._id, englishCourse._id, scienceCourse._id, hadithCourse._id];
   student2.grades = [
     { course: quranCourse._id, subject: 'Quran', grade: '85' },
     { course: mathCourse._id, subject: 'Mathematics', grade: '75' },
+    { course: englishCourse._id, subject: 'English', grade: '80' },
+    { course: scienceCourse._id, subject: 'Science', grade: '90' },
+    { course: hadithCourse._id, subject: 'Hadith', grade: '78' },
   ];
   await student2.save();
 
-  student3.enrolledCourses = [quranCourse._id, mathCourse._id, arabicCourse._id];
+  student3.enrolledCourses = [quranCourse._id, mathCourse._id, arabicCourse._id, englishCourse._id, scienceCourse._id, fiqhCourse._id];
   student3.grades = [
     { course: quranCourse._id, subject: 'Quran', grade: '95' },
     { course: mathCourse._id, subject: 'Mathematics', grade: '92' },
     { course: arabicCourse._id, subject: 'Arabic', grade: '88' },
+    { course: englishCourse._id, subject: 'English', grade: '87' },
+    { course: scienceCourse._id, subject: 'Science', grade: '85' },
+    { course: fiqhCourse._id, subject: 'Fiqh', grade: '93' },
   ];
   await student3.save();
 
@@ -192,9 +209,45 @@ async function seed() {
     startDate: new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000),
   });
 
+  const a4 = await Assignment.create({
+    title: 'Essay: My Favorite Book',
+    description: 'Write a 500-word essay about your favorite book and why you like it.',
+    course: englishCourse._id,
+    dueDate: new Date(now.getTime() + 12 * 24 * 60 * 60 * 1000),
+    startDate: now,
+  });
+
+  const a5 = await Assignment.create({
+    title: 'Science Experiment Report',
+    description: 'Conduct an experiment and write a detailed report including hypothesis, method, results, and conclusion.',
+    course: scienceCourse._id,
+    dueDate: new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000),
+    startDate: now,
+  });
+
+  const a6 = await Assignment.create({
+    title: 'Hadith Analysis',
+    description: 'Analyze an assigned hadith and discuss its chain of transmission and application.',
+    course: hadithCourse._id,
+    dueDate: new Date(now.getTime() + 8 * 24 * 60 * 60 * 1000),
+    startDate: now,
+  });
+
+  const a7 = await Assignment.create({
+    title: 'Fiqh Case Study',
+    description: 'Study and present a real-world scenario applying Islamic jurisprudence principles.',
+    course: fiqhCourse._id,
+    dueDate: new Date(now.getTime() + 10 * 24 * 60 * 60 * 1000),
+    startDate: now,
+  });
+
   quranCourse.assignments.push(a1._id);
   mathCourse.assignments.push(a2._id);
   arabicCourse.assignments.push(a3._id);
+  englishCourse.assignments.push(a4._id);
+  scienceCourse.assignments.push(a5._id);
+  hadithCourse.assignments.push(a6._id);
+  fiqhCourse.assignments.push(a7._id);
 
   // --- Announcements ---
   const ann1 = await Announcement.create({
@@ -217,6 +270,10 @@ async function seed() {
   await quranCourse.save();
   await mathCourse.save();
   await arabicCourse.save();
+  await englishCourse.save();
+  await scienceCourse.save();
+  await hadithCourse.save();
+  await fiqhCourse.save();
 
   console.log('Assignments & Announcements created');
   console.log('\n✓ Seed complete!');

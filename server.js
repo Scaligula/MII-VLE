@@ -434,6 +434,37 @@ app.get('/api/admin/courses', requireAdmin, async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+app.post('/api/admin/courses', requireAdmin, async (req, res) => {
+  try {
+    const Course = require('./models/Course');
+    const { name, description, subject, teacher } = req.body;
+
+    if (!name) {
+      return res.status(400).json({ error: 'Course name is required' });
+    }
+
+    // Check if course with same name already exists
+    const existingCourse = await Course.findOne({ name });
+    if (existingCourse) {
+      return res.status(409).json({ error: 'Course with this name already exists' });
+    }
+
+    const newCourse = new Course({
+      name,
+      description: description || '',
+      subject: subject || 'Other',
+      teacher: teacher || null,
+      students: [],
+      assignments: [],
+      announcements: []
+    });
+
+    await newCourse.save();
+    const populated = await Course.findById(newCourse._id).populate('teacher', 'name');
+    res.status(201).json(populated);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 app.put('/api/admin/courses/:id', requireAdmin, async (req, res) => {
   try {
     const Course = require('./models/Course');
@@ -446,6 +477,15 @@ app.put('/api/admin/courses/:id', requireAdmin, async (req, res) => {
       .populate('teacher', 'name');
     if (!course) return res.status(404).json({ error: 'Course not found' });
     res.json(course);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.delete('/api/admin/courses/:id', requireAdmin, async (req, res) => {
+  try {
+    const Course = require('./models/Course');
+    const course = await Course.findByIdAndDelete(req.params.id);
+    if (!course) return res.status(404).json({ error: 'Course not found' });
+    res.json({ success: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
@@ -519,10 +559,32 @@ app.post('/api/admin/students', requireAdmin, async (req, res) => {
       return res.status(400).json({ error: 'Student and guardian data are required' });
     }
 
+    // Validate guardian contact number starts with +63
+    if (!guardianData.contactNumber.startsWith('+63')) {
+      return res.status(400).json({ error: 'Guardian contact number must start with +63' });
+    }
+
     // Check if student ID already exists
     const existingStudent = await Student.findOne({ studentId: studentData.studentId });
     if (existingStudent) {
       return res.status(409).json({ error: 'Student ID already exists' });
+    }
+
+    // Create a User account for the student
+    const studentEmail = `student.${studentData.studentId}@mii.edu.ph`;
+    const existingUser = await User.findOne({ email: studentEmail });
+    
+    let studentUser;
+    if (!existingUser) {
+      studentUser = await User.create({
+        email: studentEmail,
+        role: 'student',
+        name: `${studentData.firstName} ${studentData.lastName}`,
+        permissions: [],
+        adminLevel: null
+      });
+    } else {
+      studentUser = existingUser;
     }
 
     // Create guardian
@@ -537,6 +599,7 @@ app.post('/api/admin/students', requireAdmin, async (req, res) => {
 
     // Create student
     const newStudent = await Student.create({
+      user: studentUser._id,
       firstName: studentData.firstName,
       middleName: studentData.middleName,
       lastName: studentData.lastName,
@@ -577,6 +640,11 @@ app.put('/api/admin/students/:id', requireAdmin, async (req, res) => {
 
     const student = await Student.findById(req.params.id);
     if (!student) return res.status(404).json({ error: 'Student not found' });
+
+    // Validate guardian contact number starts with +63
+    if (guardianData && guardianData.contactNumber && !guardianData.contactNumber.startsWith('+63')) {
+      return res.status(400).json({ error: 'Guardian contact number must start with +63' });
+    }
 
     // Update student data
     if (studentData) {
