@@ -7,9 +7,6 @@ const path = require('path');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
 
-const passport = require('passport');
-const GoogleStrategy = require('passport-google-oauth20').Strategy;
-
 const User = require('./models/User');
 
 const app = express();
@@ -30,143 +27,124 @@ app.use(session({
   store: MongoStore.create({ mongoUrl: MONGODB_URI })
 }));
 
-app.use(passport.initialize());
-app.use(passport.session());
-
-passport.serializeUser((user, done) => {
-  done(null, user.id);
-});
-
-passport.deserializeUser((id, done) => {
-  User.findById(id).then(user => done(null, user)).catch(done);
-});
-
-// Users who can log in as multiple roles. Key = email, value = [roles] (first is default).
-const DUAL_ROLE_USERS = {
-  'rodriguezdale364@gmail.com': ['student', 'admin'],
-  'prenneesebig@gmail.com': ['admin', 'student', 'staff', 'parent'],
+// ===== HARDCODED USER CREDENTIALS =====
+const HARDCODED_USERS = {
+  'admin': {
+    password: 'admin123',
+    name: 'Administrator',
+    role: 'admin',
+    roles: ['admin'],
+    email: 'admin@mii.edu.ph',
+    adminLevel: 'super',
+    permissions: ['manage_users', 'manage_courses', 'manage_announcements']
+  },
+  'teacher': {
+    password: 'teacher123',
+    name: 'Teacher Account',
+    role: 'staff',
+    roles: ['staff'],
+    email: 'teacher@mii.edu.ph',
+    adminLevel: null,
+    permissions: []
+  },
+  'student': {
+    password: 'student123',
+    name: 'Student Account',
+    role: 'student',
+    roles: ['student'],
+    email: 'student@mii.edu.ph',
+    adminLevel: null,
+    permissions: []
+  },
+  'parent': {
+    password: 'parent123',
+    name: 'Parent Account',
+    role: 'parent',
+    roles: ['parent'],
+    email: 'parent@mii.edu.ph',
+    adminLevel: null,
+    permissions: []
+  }
 };
 
-// Super admin emails
-const SUPER_ADMIN_EMAILS = [
-  'prenneesebig@gmail.com',
-];
-
-// External (non-mii.edu.ph) emails allowed as student-only accounts.
-const ALLOWED_STUDENT_EMAILS = [
-  'scal42069@gmail.com',
-];
-
-// Build the absolute callback URL. On Vercel the internal request arrives over
-// HTTP, so we must use the env var to guarantee the https:// scheme that
-// Google requires.  Falls back to localhost for local development.
-const callbackURL = (process.env.GOOGLE_CALLBACK_URL || 'http://localhost:3000/auth/google/callback').trim();
-console.log('[OAuth] callbackURL =', callbackURL);
-console.log('[OAuth] GOOGLE_CLIENT_ID set?', !!process.env.GOOGLE_CLIENT_ID);
-
-passport.use(new GoogleStrategy({
-  clientID: process.env.GOOGLE_CLIENT_ID,
-  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL,
-  proxy: true,
-}, async (accessToken, refreshToken, profile, done) => {
-  try {
-    const email = profile.emails?.[0]?.value;
-    const allowedExternal = [...Object.keys(DUAL_ROLE_USERS), ...ALLOWED_STUDENT_EMAILS];
-    if (!email || (!email.endsWith('@mii.edu.ph') && !allowedExternal.includes(email))) {
-      return done(null, false, { message: 'Email domain not allowed' });
-    }
-    let user = await User.findOne({ email });
-    const dualRoles = DUAL_ROLE_USERS[email];
-    const isSuperAdmin = SUPER_ADMIN_EMAILS.includes(email.toLowerCase());
-
-    if (!user) {
-      user = new User({
-        email,
-        role: dualRoles ? dualRoles[0] : 'student',
-        roles: dualRoles || [],
-        name: profile.displayName || 'Unknown',
-        profilePicture: profile.photos?.[0]?.value,
-        permissions: dualRoles?.includes('admin')
-          ? ['manage_users', 'manage_courses', 'manage_announcements']
-          : [],
-        adminLevel: dualRoles?.includes('admin') && isSuperAdmin ? 'super' : null,
-      });
-      await user.save();
-    } else {
-      // Sync dual-role data if needed
-      if (dualRoles && (!user.roles || user.roles.length < 2)) {
-        user.roles = dualRoles;
-        user.permissions = ['manage_users', 'manage_courses', 'manage_announcements'];
-        user.adminLevel = isSuperAdmin ? 'super' : 'regular';
-        await user.save();
-      }
-      // Update admin level if needed
-      if (user.role === 'admin' && isSuperAdmin && user.adminLevel !== 'super') {
-        user.adminLevel = 'super';
-        await user.save();
-      }
-    }
-    return done(null, user);
-  } catch (err) {
-    return done(err);
+// Simple session-based authentication helper
+function authenticateUser(username, password) {
+  const user = HARDCODED_USERS[username];
+  if (!user || user.password !== password) {
+    return null;
   }
-}));
+  return user;
+}
 
 app.get('/debug-callback', (req, res) => {
-  const cid = process.env.GOOGLE_CLIENT_ID || '';
-  res.json({
-    callbackURL,
-    callbackURL_raw: process.env.GOOGLE_CALLBACK_URL || '(not set, using default)',
-    callbackURL_length: (process.env.GOOGLE_CALLBACK_URL || '').length,
-    clientID_preview: cid.substring(0, 15) + '...' + cid.slice(-20),
-    clientID_set: !!process.env.GOOGLE_CLIENT_ID,
-    clientSecret_set: !!process.env.GOOGLE_CLIENT_SECRET,
-    host: req.get('host'),
-    protocol: req.protocol,
-    xForwardedProto: req.get('x-forwarded-proto'),
-  });
+  res.json({ message: 'Using hardcoded authentication instead of OAuth' });
 });
 
-app.get('/auth/google', passport.authenticate('google', {
-  scope: ['profile', 'email']
-}));
-
-app.get('/auth/google/callback', passport.authenticate('google', {
-  failureRedirect: '/?login=failed'
-}), (req, res) => {
-  const userRoles = req.user.roles || [];
-  if (userRoles.length > 1) {
-    // Multi-role user: clear any cached role and let them choose
-    req.session.activeRole = null;
-    return res.redirect('/role-select.html');
+// ===== HARDCODED LOGIN =====
+app.post('/auth/login', (req, res) => {
+  try {
+    const { username, password, role } = req.body;
+    
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Username and password are required' });
+    }
+    
+    const user = authenticateUser(username, password);
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid username or password' });
+    }
+    
+    // Check if requested role is available
+    if (role && !user.roles.includes(role)) {
+      return res.status(403).json({ error: 'Role not available for this account' });
+    }
+    
+    // Store user in session
+    req.session.user = user;
+    req.session.activeRole = role || user.role;
+    req.session.authenticated = true;
+    
+    res.json({ success: true, user });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
-  const role = req.user.role;
-  if (role === 'admin') return res.redirect('/admin-dashboard.html');
-  if (role === 'staff') return res.redirect('/staff-dashboard.html');
-  if (role === 'parent') return res.redirect('/parent-dashboard.html');
-  res.redirect('/student-dashboard.html');
 });
 
-app.get('/auth/logout', (req, res, next) => {
-  req.session.activeRole = null;
-  req.logout(err => err ? next(err) : res.redirect('/'));
+app.get('/auth/google', (req, res) => {
+  res.status(404).json({ error: 'Google OAuth is no longer supported. Use /auth/login instead.' });
 });
+
+app.get('/auth/google/callback', (req, res) => {
+  res.status(404).json({ error: 'Google OAuth is no longer supported. Use /auth/login instead.' });
+});
+
+app.get('/auth/logout', (req, res) => {
+  req.session.user = null;
+  req.session.activeRole = null;
+  req.session.authenticated = false;
+  res.redirect('/');
+});
+
+// ===== SESSION AUTHENTICATION CHECK =====
+function isAuthenticated(req, res, next) {
+  if (req.session.authenticated && req.session.user) {
+    return next();
+  }
+  res.status(401).json({ error: 'Not authenticated' });
+}
 
 // Set the active role for the current session (dual-role users only)
-app.post('/api/session/role', (req, res) => {
-  if (!req.isAuthenticated()) return res.status(401).json({ error: 'Not logged in' });
+app.post('/api/session/role', isAuthenticated, (req, res) => {
   const { role } = req.body;
-  const available = req.user.roles?.length ? req.user.roles : [req.user.role];
+  const available = req.session.user.roles || [req.session.user.role];
   if (!available.includes(role)) return res.status(403).json({ error: 'Role not available for this account' });
   req.session.activeRole = role;
   res.json({ role });
 });
 
-app.get('/api/me', (req, res) => {
-  if (!req.isAuthenticated()) return res.status(401).json({ error: 'Not logged in' });
-  const user = req.user.toObject ? req.user.toObject() : { ...req.user };
-  const available = user.roles?.length ? user.roles : [user.role];
+app.get('/api/me', isAuthenticated, (req, res) => {
+  const user = { ...req.session.user };
+  const available = user.roles || [user.role];
   if (req.session.activeRole && available.includes(req.session.activeRole)) {
     user.role = req.session.activeRole;
   }
@@ -236,24 +214,24 @@ app.get('/api/announcements', async (req, res) => {
 
 // ===== Admin Middleware =====
 function requireAdmin(req, res, next) {
-  if (!req.isAuthenticated()) return res.status(401).json({ error: 'Not authenticated' });
-  const available = req.user.roles?.length ? req.user.roles : [req.user.role];
+  if (!req.session.authenticated || !req.session.user) return res.status(401).json({ error: 'Not authenticated' });
+  const available = req.session.user.roles || [req.session.user.role];
   const activeRole = req.session.activeRole && available.includes(req.session.activeRole)
     ? req.session.activeRole
-    : req.user.role;
+    : req.session.user.role;
   if (activeRole !== 'admin') return res.status(403).json({ error: 'Forbidden' });
   next();
 }
 
 // ===== Super Admin Middleware =====
 function requireSuperAdmin(req, res, next) {
-  if (!req.isAuthenticated()) return res.status(401).json({ error: 'Not authenticated' });
-  const available = req.user.roles?.length ? req.user.roles : [req.user.role];
+  if (!req.session.authenticated || !req.session.user) return res.status(401).json({ error: 'Not authenticated' });
+  const available = req.session.user.roles || [req.session.user.role];
   const activeRole = req.session.activeRole && available.includes(req.session.activeRole)
     ? req.session.activeRole
-    : req.user.role;
+    : req.session.user.role;
   if (activeRole !== 'admin') return res.status(403).json({ error: 'Forbidden' });
-  if (req.user.adminLevel !== 'super') return res.status(403).json({ error: 'Super admin access required' });
+  if (req.session.user.adminLevel !== 'super') return res.status(403).json({ error: 'Super admin access required' });
   next();
 }
 
@@ -291,12 +269,14 @@ app.post('/api/admin/admins', requireSuperAdmin, async (req, res) => {
 
 app.delete('/api/admin/admins/:id', requireSuperAdmin, async (req, res) => {
   try {
-    if (req.params.id === String(req.user._id)) {
-      return res.status(400).json({ error: 'Cannot remove your own admin access' });
-    }
-
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ error: 'Admin not found' });
+    
+    // Prevent removing own admin access
+    if (req.session.user && req.session.user.email === user.email) {
+      return res.status(400).json({ error: 'Cannot remove your own admin access' });
+    }
+    
     if (user.adminLevel === 'super') return res.status(400).json({ error: 'Cannot remove super admin access' });
 
     user.adminLevel = null;
@@ -355,12 +335,16 @@ app.put('/api/admin/users/:id', requireAdmin, async (req, res) => {
 
 app.delete('/api/admin/users/:id', requireAdmin, async (req, res) => {
   try {
-    if (req.params.id === String(req.user._id)) return res.status(400).json({ error: 'Cannot delete your own account' });
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ error: 'User not found' });
+    
+    // Prevent deleting own account
+    if (req.session.user && req.session.user.email === user.email) {
+      return res.status(400).json({ error: 'Cannot delete your own account' });
+    }
 
     const { hardDelete } = req.body;
-    const isSuperAdmin = req.user.adminLevel === 'super';
+    const isSuperAdmin = req.session.user && req.session.user.adminLevel === 'super';
 
     // Only super admin can hard delete
     if (hardDelete && !isSuperAdmin) {
@@ -380,7 +364,7 @@ app.delete('/api/admin/users/:id', requireAdmin, async (req, res) => {
       // Regular or super admin soft delete
       user.isDeleted = true;
       user.deletedAt = new Date();
-      user.deletedBy = req.user._id;
+      user.deletedBy = req.session.user.email; // Store email instead of ID
       await user.save();
       res.json({ success: true, message: 'User soft deleted (can be restored by super admin)' });
     }
@@ -674,12 +658,16 @@ app.put('/api/admin/students/:id', requireAdmin, async (req, res) => {
 
 app.delete('/api/admin/students/:id', requireAdmin, async (req, res) => {
   try {
-    if (req.params.id === String(req.user._id)) return res.status(400).json({ error: 'Cannot delete your own account' });
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ error: 'Student not found' });
+    
+    // Prevent deleting own account
+    if (req.session.user && req.session.user.email === user.email) {
+      return res.status(400).json({ error: 'Cannot delete your own account' });
+    }
 
     const { hardDelete } = req.body;
-    const isSuperAdmin = req.user.adminLevel === 'super';
+    const isSuperAdmin = req.session.user && req.session.user.adminLevel === 'super';
 
     // Only super admin can hard delete
     if (hardDelete && !isSuperAdmin) {
@@ -699,7 +687,7 @@ app.delete('/api/admin/students/:id', requireAdmin, async (req, res) => {
       // Regular or super admin soft delete
       user.isDeleted = true;
       user.deletedAt = new Date();
-      user.deletedBy = req.user._id;
+      user.deletedBy = req.session.user.email; // Store email instead of ID
       await user.save();
       res.json({ success: true, message: 'User soft deleted' });
     }
@@ -709,11 +697,11 @@ app.delete('/api/admin/students/:id', requireAdmin, async (req, res) => {
 // ===== Parent/Guardian Login =====
 // Middleware to check if user is parent or guardian
 function requireParent(req, res, next) {
-  if (!req.isAuthenticated()) return res.status(401).json({ error: 'Not authenticated' });
-  const available = req.user.roles?.length ? req.user.roles : [req.user.role];
+  if (!req.session.authenticated || !req.session.user) return res.status(401).json({ error: 'Not authenticated' });
+  const available = req.session.user.roles || [req.session.user.role];
   const activeRole = req.session.activeRole && available.includes(req.session.activeRole)
     ? req.session.activeRole
-    : req.user.role;
+    : req.session.user.role;
   if (activeRole !== 'parent') return res.status(403).json({ error: 'Forbidden' });
   next();
 }
