@@ -427,6 +427,10 @@ app.post('/api/admin/courses', requireAdmin, async (req, res) => {
       return res.status(400).json({ error: 'Course name is required' });
     }
 
+    if (!teacher) {
+      return res.status(400).json({ error: 'Teacher is required' });
+    }
+
     // Check if course with same name already exists
     const existingCourse = await Course.findOne({ name });
     if (existingCourse) {
@@ -437,7 +441,7 @@ app.post('/api/admin/courses', requireAdmin, async (req, res) => {
       name,
       description: description || '',
       subject: subject || 'Other',
-      teacher: teacher || null,
+      teacher,
       students: [],
       assignments: [],
       announcements: []

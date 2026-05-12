@@ -175,6 +175,13 @@
           <textarea id="courseDescription" rows="3" placeholder="Course description..."></textarea>
         </div>
 
+        <div class="form-group">
+          <label>Teacher *</label>
+          <select id="courseTeacher" required>
+            <option value="">-- Select a Teacher --</option>
+          </select>
+        </div>
+
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" onclick="closeCourseModal()">Cancel</button>
           <button type="submit" class="btn btn-primary">Save Course</button>
@@ -242,11 +249,28 @@
       renderCourses(filtered);
     });
 
-    function openAddCourseModal() {
+    async function openAddCourseModal() {
       currentCourseId = null;
       document.getElementById('courseModalTitle').textContent = 'Add New Course';
       document.getElementById('courseForm').reset();
+      await loadTeachers();
       document.getElementById('courseModal').classList.add('open');
+    }
+
+    async function loadTeachers() {
+      try {
+        const res = await fetch('/api/admin/users');
+        if (!res.ok) throw new Error('Failed to load teachers');
+        const users = await res.json();
+        const teachers = users.filter(u => u.role === 'staff');
+        const select = document.getElementById('courseTeacher');
+        const currentValue = select.value;
+        select.innerHTML = '<option value="">-- Select a Teacher --</option>' +
+          teachers.map(t => `<option value="${t._id}">${t.name}</option>`).join('');
+        select.value = currentValue;
+      } catch (err) {
+        console.error('Error loading teachers:', err);
+      }
     }
 
     function closeCourseModal() {
@@ -261,7 +285,8 @@
       const courseData = {
         name: document.getElementById('courseName').value,
         subject: document.getElementById('courseSubject').value,
-        description: document.getElementById('courseDescription').value
+        description: document.getElementById('courseDescription').value,
+        teacher: document.getElementById('courseTeacher').value
       };
 
       try {
