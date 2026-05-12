@@ -674,31 +674,35 @@ app.put('/api/admin/students/:id', requireAdmin, async (req, res) => {
 
 app.delete('/api/admin/students/:id', requireAdmin, async (req, res) => {
   try {
-    const Student = require('./models/Student');
-    const Guardian = require('./models/Guardian');
-    const Attendance = require('./models/Attendance');
-    const TeacherFeedback = require('./models/TeacherFeedback');
+    if (req.params.id === String(req.user._id)) return res.status(400).json({ error: 'Cannot delete your own account' });
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ error: 'Student not found' });
 
-    const student = await Student.findById(req.params.id);
-    if (!student) return res.status(404).json({ error: 'Student not found' });
+    const { hardDelete } = req.body;
+    const isSuperAdmin = req.user.adminLevel === 'super';
 
-    // Delete associated guardians
-    if (student.guardians) {
-      await Guardian.deleteMany({ _id: { $in: student.guardians } });
+    // Only super admin can hard delete
+    if (hardDelete && !isSuperAdmin) {
+      return res.status(403).json({ error: 'Only super admins can permanently delete users' });
     }
 
-    // Delete associated attendance records
-    if (student.attendance) {
-      await Attendance.deleteMany({ _id: { $in: student.attendance } });
+    // Only students can be deleted from this endpoint
+    if (user.role !== 'student') {
+      return res.status(400).json({ error: 'Only student accounts can be deleted from this endpoint' });
     }
 
-    // Delete associated feedback
-    if (student.feedbacks) {
-      await TeacherFeedback.deleteMany({ _id: { $in: student.feedbacks } });
+    if (hardDelete) {
+      // Super admin hard delete
+      await User.findByIdAndDelete(req.params.id);
+      res.json({ success: true, message: 'User permanently deleted' });
+    } else {
+      // Regular or super admin soft delete
+      user.isDeleted = true;
+      user.deletedAt = new Date();
+      user.deletedBy = req.user._id;
+      await user.save();
+      res.json({ success: true, message: 'User soft deleted' });
     }
-
-    await Student.findByIdAndDelete(req.params.id);
-    res.json({ success: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
