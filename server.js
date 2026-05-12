@@ -540,11 +540,7 @@ app.get('/api/admin/analytics', requireAdmin, async (req, res) => {
 // ===== Admin: Students =====
 app.get('/api/admin/students', requireAdmin, async (req, res) => {
   try {
-    const Student = require('./models/Student');
-    const students = await Student.find({})
-      .populate('user', 'email')
-      .populate('guardians')
-      .lean();
+    const students = await User.find({ role: 'student' }).populate('enrolledCourses', 'name subject').lean();
     res.json(students);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });

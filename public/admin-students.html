@@ -136,10 +136,10 @@
           <thead>
             <tr>
               <th>Name</th>
-              <th>Student ID</th>
-              <th>Course</th>
+              <th>Email</th>
+              <th>Enrolled Courses</th>
               <th>Grade</th>
-              <th>Guardians</th>
+              <th>Children</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -317,11 +317,11 @@
       }
       tbody.innerHTML = students.map(s => `
         <tr>
-          <td><span class="student-name" onclick="viewStudentDetail('${s._id}')">${s.firstName} ${s.lastName}</span></td>
-          <td>${s.studentId}</td>
-          <td>${s.course}</td>
-          <td>${s.grade}</td>
-          <td>${s.guardians?.length || 0} guardian(s)</td>
+          <td><span class="student-name" onclick="viewStudentDetail('${s._id}')">${s.name}</span></td>
+          <td>${s.email}</td>
+          <td>${s.enrolledCourses?.length || 0} course(s)</td>
+          <td>${s.grades?.length > 0 ? s.grades[0].grade : 'N/A'}</td>
+          <td>${s.children?.length || 0}</td>
           <td class="action-cell">
             <button class="icon-btn" onclick="viewStudentDetail('${s._id}')" title="View">👁️</button>
             <button class="icon-btn" onclick="editStudent('${s._id}')" title="Edit">✏️</button>
@@ -334,8 +334,8 @@
     document.getElementById('searchInput').addEventListener('input', (e) => {
       const query = e.target.value.toLowerCase();
       const filtered = allStudents.filter(s =>
-        `${s.firstName} ${s.lastName}`.toLowerCase().includes(query) ||
-        s.studentId.toLowerCase().includes(query)
+        s.name.toLowerCase().includes(query) ||
+        s.email.toLowerCase().includes(query)
       );
       renderStudents(filtered);
     });
