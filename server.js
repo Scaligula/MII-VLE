@@ -291,7 +291,7 @@ app.delete('/api/admin/admins/:id', requireSuperAdmin, async (req, res) => {
 // ===== Admin: Users =====
 app.get('/api/admin/users', requireAdmin, async (req, res) => {
   try {
-    const users = await User.find({}).populate('enrolledCourses', 'name subject').lean();
+    const users = await User.find({ isDeleted: { $ne: true } }).populate('enrolledCourses', 'name subject').lean();
     res.json(users);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -362,9 +362,10 @@ app.delete('/api/admin/users/:id', requireAdmin, async (req, res) => {
       res.json({ success: true, message: 'User permanently deleted' });
     } else {
       // Regular or super admin soft delete
+      const adminUser = await User.findOne({ email: req.session.user.email });
       user.isDeleted = true;
       user.deletedAt = new Date();
-      user.deletedBy = req.session.user.email; // Store email instead of ID
+      user.deletedBy = adminUser ? adminUser._id : null;
       await user.save();
       res.json({ success: true, message: 'User soft deleted (can be restored by super admin)' });
     }
