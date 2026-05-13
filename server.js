@@ -492,8 +492,8 @@ app.get('/api/admin/analytics', requireAdmin, async (req, res) => {
   try {
     const Course = require('./models/Course');
     const [students, faculty, courses] = await Promise.all([
-      User.find({ role: 'student' }).select('name grades progress enrolledCourses').lean(),
-      User.find({ role: 'staff' }).select('name email').lean(),
+      User.find({ role: 'student', isDeleted: { $ne: true } }).select('name grades progress enrolledCourses').lean(),
+      User.find({ role: 'staff', isDeleted: { $ne: true } }).select('name email').lean(),
       Course.find({}).select('name subject students').lean(),
     ]);
     const subjectGrades = {};
