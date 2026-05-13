@@ -70,14 +70,18 @@
     .students-table tr:hover { background: var(--surface2); }
     .student-name { color: var(--green); cursor: pointer; font-weight: 600; }
     .student-name:hover { text-decoration: underline; }
-    .action-cell { display: flex; gap: 0.5rem; }
-    .icon-btn {
-      background: none; border: none; color: var(--text-muted);
-      cursor: pointer; font-size: 0.9rem; padding: 0.25rem;
-      transition: color 0.15s;
+    .action-cell { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .action-btn {
+      background: none; border: 1px solid var(--border2);
+      border-radius: 6px; color: var(--text-muted);
+      padding: 0.25rem 0.5rem; cursor: pointer; font-size: 0.78rem;
+      transition: all 0.15s; white-space: nowrap;
     }
-    .icon-btn:hover { color: var(--green); }
-    .icon-btn.delete:hover { color: #ff6b6b; }
+    .action-btn:hover { background: var(--surface3); color: var(--text); }
+    .action-btn.danger { border-color: rgba(180,50,50,0.3); color: #e08080; }
+    .action-btn.danger:hover { background: rgba(180,50,50,0.1); }
+    .action-btn.primary { border-color: var(--green-border); color: #7ec87e; }
+    .action-btn.primary:hover { background: var(--green-dim); }
     .empty-state {
       text-align: center; padding: 2rem;
       color: var(--text-muted);
@@ -323,9 +327,8 @@
           <td>${s.grades?.length > 0 ? s.grades[0].grade : 'N/A'}</td>
           <td>${s.children?.length || 0}</td>
           <td class="action-cell">
-            <button class="icon-btn" onclick="viewStudentDetail('${s._id}')" title="View">👁️</button>
-            <button class="icon-btn" onclick="editStudent('${s._id}')" title="Edit">✏️</button>
-            <button class="icon-btn delete" onclick="deleteStudent('${s._id}')" title="Delete">🗑️</button>
+            <button class="action-btn primary" onclick="viewStudentDetail('${s._id}')">📋 View</button>
+            <button class="action-btn danger" onclick="deleteStudent('${s._id}')">🗑 Delete</button>
           </td>
         </tr>
       `).join('');
