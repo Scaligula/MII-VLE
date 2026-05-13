@@ -143,12 +143,11 @@
               <th>Email</th>
               <th>Enrolled Courses</th>
               <th>Grade</th>
-              <th>Children</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody id="studentTableBody">
-            <tr><td colspan="6" class="empty-state">Loading students...</td></tr>
+            <tr><td colspan="5" class="empty-state">Loading students...</td></tr>
           </tbody>
         </table>
       </div>
@@ -316,7 +315,7 @@
     function renderStudents(students) {
       const tbody = document.getElementById('studentTableBody');
       if (!students.length) {
-        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No students found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No students found</td></tr>';
         return;
       }
       tbody.innerHTML = students.map(s => `
@@ -325,7 +324,6 @@
           <td>${s.email}</td>
           <td>${s.enrolledCourses?.length || 0} course(s)</td>
           <td>${s.grades?.length > 0 ? s.grades[0].grade : 'N/A'}</td>
-          <td>${s.children?.length || 0}</td>
           <td class="action-cell">
             <button class="action-btn primary" onclick="viewStudentDetail('${s._id}')">📋 View</button>
             <button class="action-btn danger" onclick="deleteStudent('${s._id}')">🗑 Delete</button>
