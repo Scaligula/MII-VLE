@@ -12,7 +12,10 @@ const studentSchema = new mongoose.Schema({
   guardians: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Guardian' }],
   enrolledCourses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }],
   attendance: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Attendance' }],
-  feedbacks: [{ type: mongoose.Schema.Types.ObjectId, ref: 'TeacherFeedback' }]
+  feedbacks: [{ type: mongoose.Schema.Types.ObjectId, ref: 'TeacherFeedback' }],
+  isDeleted: { type: Boolean, default: false },
+  deletedAt: { type: Date, default: null },
+  deletedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Student', studentSchema);

@@ -69,6 +69,17 @@
     .course-stats { display: flex; gap: 1rem; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.75rem; }
     .course-stat { display: flex; align-items: center; gap: 0.2rem; }
     .course-actions { display: flex; gap: 0.5rem; }
+    .action-btn {
+      background: none; border: 1px solid var(--border2);
+      border-radius: 6px; color: var(--text-muted);
+      padding: 0.25rem 0.5rem; cursor: pointer; font-size: 0.78rem;
+      transition: all 0.15s; white-space: nowrap;
+    }
+    .action-btn:hover { background: var(--surface3); color: var(--text); }
+    .action-btn.danger { border-color: rgba(180,50,50,0.3); color: #e08080; }
+    .action-btn.danger:hover { background: rgba(180,50,50,0.1); }
+    .action-btn.primary { border-color: var(--green-border); color: #7ec87e; }
+    .action-btn.primary:hover { background: var(--green-dim); }
     .icon-btn {
       background: none; border: none; color: var(--text-muted);
       cursor: pointer; font-size: 0.9rem; padding: 0.25rem;
@@ -190,6 +201,22 @@
     </div>
   </div>
 
+  <!-- View Course Detail Modal -->
+  <div class="modal-overlay" id="courseDetailModal">
+    <div class="modal">
+      <button class="modal-close" onclick="closeDetailModal()">✕</button>
+      <div class="modal-title">Course Details</div>
+      <div id="courseDetailContent" style="font-size: 0.84rem; line-height: 1.8;">
+        <!-- Populated dynamically -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeDetailModal()">Close</button>
+        <button class="btn btn-primary" onclick="editCurrentCourse()">Edit</button>
+        <button class="btn btn-danger" onclick="deleteCurrentCourse()">Delete</button>
+      </div>
+    </div>
+  </div>
+
   <script src="script.js"></script>
   <script>
     let currentCourseId = null;
@@ -226,15 +253,15 @@
               <div class="course-name">${c.name}</div>
               <span class="subject-badge">${c.subject}</span>
             </div>
-            <div class="course-actions">
-              <button class="icon-btn" onclick="editCourse('${c._id}')" title="Edit">✏️</button>
-              <button class="icon-btn delete" onclick="deleteCourse('${c._id}')" title="Delete">🗑️</button>
-            </div>
           </div>
           ${c.description ? `<div class="course-desc">${c.description}</div>` : ''}
           <div class="course-stats">
             <div class="course-stat">👨‍🏫 Teacher: ${c.teacher?.name || 'Unassigned'}</div>
             <div class="course-stat">🧒 Students: ${c.students?.length || 0}</div>
+          </div>
+          <div class="course-actions" style="margin-top: 0.75rem;">
+            <button class="action-btn primary" onclick="viewCourseDetail('${c._id}')">📋 View</button>
+            <button class="action-btn danger" onclick="deleteCourse('${c._id}')">🗑 Delete</button>
           </div>
         </div>
       `).join('') + '</div>';
@@ -293,6 +320,11 @@
         let url = '/api/admin/courses';
         let method = 'POST';
 
+        if (currentCourseId) {
+          url = `/api/admin/courses/${currentCourseId}`;
+          method = 'PUT';
+        }
+
         const res = await fetch(url, {
           method,
           headers: { 'Content-Type': 'application/json' },
@@ -324,11 +356,66 @@
         document.getElementById('courseName').value = course.name;
         document.getElementById('courseSubject').value = course.subject || '';
         document.getElementById('courseDescription').value = course.description || '';
+        
+        await loadTeachers();
+        document.getElementById('courseTeacher').value = course.teacher?._id || '';
 
         document.getElementById('courseModal').classList.add('open');
       } catch (err) {
         console.error(err);
         alert('Error loading course for edit');
+      }
+    }
+
+    async function viewCourseDetail(courseId) {
+      try {
+        const res = await fetch(`/api/admin/courses/${courseId}`);
+        if (!res.ok) throw new Error('Failed to load course');
+        const course = await res.json();
+        currentCourseId = courseId;
+
+        const detail = `
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div>
+              <strong>Course Name:</strong> ${course.name}<br>
+              <strong>Subject:</strong> ${course.subject || 'N/A'}<br>
+              <strong>Teacher:</strong> ${course.teacher?.name || 'Unassigned'}
+            </div>
+            <div>
+              <strong>Students:</strong> ${course.students?.length || 0}<br>
+              <strong>Assignments:</strong> ${course.assignments?.length || 0}<br>
+              <strong>Announcements:</strong> ${course.announcements?.length || 0}
+            </div>
+          </div>
+          <div style="margin-top: 1rem; border-top: 1px solid var(--border); padding-top: 1rem;">
+            <strong style="display: block; margin-bottom: 0.5rem;">Description:</strong>
+            <p>${course.description || 'No description provided'}</p>
+          </div>
+        `;
+
+        document.getElementById('courseDetailContent').innerHTML = detail;
+        document.getElementById('courseDetailModal').classList.add('open');
+      } catch (err) {
+        console.error(err);
+        alert('Error loading course details');
+      }
+    }
+
+    function closeDetailModal() {
+      document.getElementById('courseDetailModal').classList.remove('open');
+    }
+
+    function editCurrentCourse() {
+      if (currentCourseId) {
+        closeDetailModal();
+        editCourse(currentCourseId);
+      }
+    }
+
+    function deleteCurrentCourse() {
+      if (currentCourseId) {
+        closeDetailModal();
+        deleteCourse(currentCourseId);
       }
     }
 

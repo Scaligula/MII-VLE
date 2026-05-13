@@ -418,6 +418,15 @@ app.get('/api/admin/courses', requireAdmin, async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+app.get('/api/admin/courses/:id', requireAdmin, async (req, res) => {
+  try {
+    const Course = require('./models/Course');
+    const course = await Course.findById(req.params.id).populate('teacher', 'name');
+    if (!course) return res.status(404).json({ error: 'Course not found' });
+    res.json(course);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 app.post('/api/admin/courses', requireAdmin, async (req, res) => {
   try {
     const Course = require('./models/Course');
@@ -456,7 +465,7 @@ app.post('/api/admin/courses', requireAdmin, async (req, res) => {
 app.put('/api/admin/courses/:id', requireAdmin, async (req, res) => {
   try {
     const Course = require('./models/Course');
-    const allowed = ['teacher', 'students'];
+    const allowed = ['name', 'description', 'subject', 'teacher', 'students'];
     const update = {};
     for (const key of allowed) {
       if (req.body[key] !== undefined) update[key] = req.body[key];
@@ -528,7 +537,7 @@ app.get('/api/admin/analytics', requireAdmin, async (req, res) => {
 // ===== Admin: Students =====
 app.get('/api/admin/students', requireAdmin, async (req, res) => {
   try {
-    const students = await User.find({ role: 'student' }).populate('enrolledCourses', 'name subject').lean();
+    const students = await User.find({ role: 'student', isDeleted: { $ne: true } }).populate('enrolledCourses', 'name subject').lean();
     res.json(students);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -605,12 +614,22 @@ app.post('/api/admin/students', requireAdmin, async (req, res) => {
 app.get('/api/admin/students/:id', requireAdmin, async (req, res) => {
   try {
     const Student = require('./models/Student');
-    const student = await Student.findById(req.params.id)
-      .populate('user')
+    // Try to find Student by ID first, then by user reference
+    let student = await Student.findById(req.params.id)
       .populate('guardians')
       .populate('enrolledCourses')
       .populate('attendance')
       .populate('feedbacks');
+    
+    if (!student) {
+      // If not found, try finding by user reference (User ID)
+      student = await Student.findOne({ user: req.params.id })
+        .populate('guardians')
+        .populate('enrolledCourses')
+        .populate('attendance')
+        .populate('feedbacks');
+    }
+    
     if (!student) return res.status(404).json({ error: 'Student not found' });
     res.json(student);
   } catch (err) { res.status(500).json({ error: err.message }); }
@@ -662,6 +681,7 @@ app.put('/api/admin/students/:id', requireAdmin, async (req, res) => {
 
 app.delete('/api/admin/students/:id', requireAdmin, async (req, res) => {
   try {
+    const Student = require('./models/Student');
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ error: 'Student not found' });
     
@@ -684,7 +704,8 @@ app.delete('/api/admin/students/:id', requireAdmin, async (req, res) => {
     }
 
     if (hardDelete) {
-      // Super admin hard delete
+      // Super admin hard delete - also delete from Student collection
+      await Student.deleteOne({ user: req.params.id });
       await User.findByIdAndDelete(req.params.id);
       res.json({ success: true, message: 'User permanently deleted' });
     } else {
@@ -694,6 +715,14 @@ app.delete('/api/admin/students/:id', requireAdmin, async (req, res) => {
       user.deletedAt = new Date();
       user.deletedBy = adminUser ? adminUser._id : null;
       await user.save();
+      
+      // Also mark the associated Student as deleted
+      await Student.findOneAndUpdate(
+        { user: req.params.id },
+        { isDeleted: true, deletedAt: new Date(), deletedBy: adminUser ? adminUser._id : null },
+        { new: true }
+      );
+      
       res.json({ success: true, message: 'User soft deleted' });
     }
   } catch (err) { res.status(500).json({ error: err.message }); }
