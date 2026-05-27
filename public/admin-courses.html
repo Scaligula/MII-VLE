@@ -172,16 +172,57 @@
         </div>
 
         <div class="form-group">
+          <label>Grade Level *</label>
+          <select id="subjectGrade" required>
+            <option value="">-- Select a Grade --</option>
+            <option value="Kinder 1">Kinder 1</option>
+            <option value="Kinder 2">Kinder 2</option>
+            <option value="Grade 1">Grade 1</option>
+            <option value="Grade 2">Grade 2</option>
+            <option value="Grade 3">Grade 3</option>
+            <option value="Grade 4">Grade 4</option>
+            <option value="Grade 5">Grade 5</option>
+            <option value="Grade 6">Grade 6</option>
+            <option value="Grade 7">Grade 7</option>
+            <option value="Grade 8">Grade 8</option>
+            <option value="Grade 9">Grade 9</option>
+            <option value="Grade 10">Grade 10</option>
+            <option value="Grade 11">Grade 11</option>
+            <option value="Grade 12">Grade 12</option>
+          </select>
+        </div>
+
+        <div class="form-group">
           <label>Category *</label>
           <select id="subjectCategory" required>
             <option value="">-- Select a Category --</option>
-            <option value="Quran">Quran Memorization</option>
-            <option value="Hadith">Hadith</option>
+            <option value="Aqeedah & Fiqh">Aqeedah & Fiqh</option>
+            <option value="Seerah & Hadith">Seerah & Hadith</option>
+            <option value="Qur'an Reading">Qur'an Reading</option>
+            <option value="Akhlaq">Akhlaq</option>
+            <option value="Arabic Language">Arabic Language</option>
+            <option value="Tawheed">Tawheed</option>
             <option value="Fiqh">Fiqh</option>
-            <option value="Arabic">Arabic</option>
-            <option value="Mathematics">Mathematics</option>
-            <option value="English">English</option>
-            <option value="Science">Science</option>
+            <option value="Lugah">Lugah</option>
+            <option value="Khat Wa Imla">Khat Wa Imla</option>
+            <option value="Hisab">Hisab</option>
+            <option value="Hadith">Hadith</option>
+            <option value="Qur'an">Qur'an</option>
+            <option value="Qawaed">Qawaed</option>
+            <option value="Seerah">Seerah</option>
+            <option value="Qir'ah">Qir'ah</option>
+            <option value="Tafseer">Tafseer</option>
+            <option value="Tareeh">Tareeh</option>
+            <option value="Imla">Imla</option>
+            <option value="Ta'beer">Ta'beer</option>
+            <option value="Mustalahol Hadith">Mustalahol Hadith</option>
+            <option value="Ulomol Qur'an">Ulomol Qur'an</option>
+            <option value="Nahu">Nahu</option>
+            <option value="Faraidh">Faraidh</option>
+            <option value="Usolot Tafseer">Usolot Tafseer</option>
+            <option value="Ulomol Hadith">Ulomol Hadith</option>
+            <option value="Usolol Fiqh">Usolol Fiqh</option>
+            <option value="Tareehol Fiqh">Tareehol Fiqh</option>
             <option value="Other">Other</option>
           </select>
         </div>
@@ -251,9 +292,10 @@
         return;
       }
       
-      container.innerHTML = '<table class="subjects-table"><thead><tr><th>Subject Name</th><th>Category</th><th>Teacher</th><th>Students</th><th>Actions</th></tr></thead><tbody>' + subjects.map(s => `
+      container.innerHTML = '<table class="subjects-table"><thead><tr><th>Subject Name</th><th>Grade</th><th>Category</th><th>Teacher</th><th>Students</th><th>Actions</th></tr></thead><tbody>' + subjects.map(s => `
         <tr>
           <td><span class="subject-name">${s.name}</span></td>
+          <td>${s.grade || 'N/A'}</td>
           <td><span class="subject-badge">${s.subject}</span></td>
           <td>${s.teacher?.name || 'Unassigned'}</td>
           <td>${s.students?.length || 0}</td>
@@ -271,7 +313,8 @@
       const query = e.target.value.toLowerCase();
       const filtered = allSubjects.filter(s =>
         s.name.toLowerCase().includes(query) ||
-        s.subject.toLowerCase().includes(query)
+        s.subject.toLowerCase().includes(query) ||
+        (s.grade && s.grade.toLowerCase().includes(query))
       );
       renderSubjects(filtered);
     });
@@ -312,6 +355,7 @@
       const subjectData = {
         name: document.getElementById('subjectName').value,
         subject: document.getElementById('subjectCategory').value,
+        grade: document.getElementById('subjectGrade').value,
         description: document.getElementById('subjectDescription').value,
         teacher: document.getElementById('subjectTeacher').value
       };
@@ -354,6 +398,7 @@
 
         document.getElementById('subjectModalTitle').textContent = 'Edit Subject';
         document.getElementById('subjectName').value = subject.name;
+        document.getElementById('subjectGrade').value = subject.grade || '';
         document.getElementById('subjectCategory').value = subject.subject || '';
         document.getElementById('subjectDescription').value = subject.description || '';
         
@@ -378,6 +423,7 @@
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
             <div>
               <strong>Subject Name:</strong> ${subject.name}<br>
+              <strong>Grade:</strong> ${subject.grade || 'N/A'}<br>
               <strong>Category:</strong> ${subject.subject || 'N/A'}<br>
               <strong>Teacher:</strong> ${subject.teacher?.name || 'Unassigned'}
             </div>

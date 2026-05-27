@@ -431,7 +431,7 @@ app.get('/api/admin/courses/:id', requireAdmin, async (req, res) => {
 app.post('/api/admin/courses', requireAdmin, async (req, res) => {
   try {
     const Course = require('./models/Course');
-    const { name, description, subject, teacher } = req.body;
+    const { name, description, subject, grade, teacher } = req.body;
 
     if (!name) {
       return res.status(400).json({ error: 'Course name is required' });
@@ -451,6 +451,7 @@ app.post('/api/admin/courses', requireAdmin, async (req, res) => {
       name,
       description: description || '',
       subject: subject || 'Other',
+      grade: grade || '',
       teacher,
       students: [],
       assignments: [],
@@ -466,7 +467,7 @@ app.post('/api/admin/courses', requireAdmin, async (req, res) => {
 app.put('/api/admin/courses/:id', requireAdmin, async (req, res) => {
   try {
     const Course = require('./models/Course');
-    const allowed = ['name', 'description', 'subject', 'teacher', 'students'];
+    const allowed = ['name', 'description', 'subject', 'grade', 'teacher', 'students'];
     const update = {};
     for (const key of allowed) {
       if (req.body[key] !== undefined) update[key] = req.body[key];
