@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Course Management — MII VLE</title>
+  <title>Subject Management — MII VLE</title>
   <link rel="stylesheet" href="MII.css" />
   <style>
     .modal-overlay {
@@ -55,20 +55,25 @@
       border-radius: 6px; color: var(--text); font-size: 0.84rem;
     }
     .search-input:focus { outline: none; border-color: var(--green); }
-    .courses-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; margin-top: 1rem; }
-    .course-card {
-      background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 10px; padding: 1rem;
-      transition: all 0.15s;
-      cursor: pointer;
+    .subjects-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    .subjects-table thead { background: var(--surface2); }
+    .subjects-table th { 
+      padding: 0.75rem; text-align: left; font-weight: 600; 
+      color: var(--text-muted); font-size: 0.8rem; border-bottom: 1px solid var(--border2);
     }
-    .course-card:hover { border-color: var(--green); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-    .course-name { font-size: 0.95rem; font-weight: 700; color: var(--green); margin-bottom: 0.3rem; }
-    .course-subject { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem; }
-    .course-desc { font-size: 0.8rem; color: var(--text); margin-bottom: 0.75rem; line-height: 1.4; }
-    .course-stats { display: flex; gap: 1rem; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.75rem; }
-    .course-stat { display: flex; align-items: center; gap: 0.2rem; }
-    .course-actions { display: flex; gap: 0.5rem; }
+    .subjects-table td { 
+      padding: 0.75rem; border-bottom: 1px solid var(--border2); 
+      font-size: 0.84rem; color: var(--text);
+    }
+    .subjects-table tbody tr { transition: background 0.15s; }
+    .subjects-table tbody tr:hover { background: var(--surface2); }
+    .subject-name { font-weight: 600; color: var(--green); }
+    .subject-badge { 
+      display: inline-block; padding: 0.2rem 0.5rem;
+      background: rgba(50,100,180,0.13); color: #80aaee;
+      border-radius: 4px; font-size: 0.7rem; font-weight: 600;
+    }
+    .subject-actions { display: flex; gap: 0.5rem; }
     .action-btn {
       background: none; border: 1px solid var(--border2);
       border-radius: 6px; color: var(--text-muted);
@@ -125,7 +130,7 @@
       <a class="nav-item" href="admin-dashboard.html" style="display: flex; align-items: center; gap: 0.65rem; padding: 0.5rem 1rem; color: var(--text-muted); font-size: 0.84rem; font-weight: 500; cursor: pointer; border-radius: 0; transition: all 0.15s; border-left: 2px solid transparent;"><span style="font-size: 1rem; width: 18px; text-align: center;">⊞</span> Dashboard</a>
       <a class="nav-item" href="admin-users.html" style="display: flex; align-items: center; gap: 0.65rem; padding: 0.5rem 1rem; color: var(--text-muted); font-size: 0.84rem; font-weight: 500; cursor: pointer; border-radius: 0; transition: all 0.15s; border-left: 2px solid transparent;"><span style="font-size: 1rem; width: 18px; text-align: center;">👥</span> User Management</a>
       <a class="nav-item" href="admin-students.html" style="display: flex; align-items: center; gap: 0.65rem; padding: 0.5rem 1rem; color: var(--text-muted); font-size: 0.84rem; font-weight: 500; cursor: pointer; border-radius: 0; transition: all 0.15s; border-left: 2px solid transparent;"><span style="font-size: 1rem; width: 18px; text-align: center;">🧒</span> Students</a>
-      <a class="nav-item active" href="admin-courses.html" style="display: flex; align-items: center; gap: 0.65rem; padding: 0.5rem 1rem; background: var(--green-dim); color: #8ecf8e; font-size: 0.84rem; font-weight: 500; cursor: pointer; border-radius: 0; transition: all 0.15s; border-left: 2px solid var(--green);"><span style="font-size: 1rem; width: 18px; text-align: center;">📖</span> Courses</a>
+      <a class="nav-item active" href="admin-courses.html" style="display: flex; align-items: center; gap: 0.65rem; padding: 0.5rem 1rem; background: var(--green-dim); color: #8ecf8e; font-size: 0.84rem; font-weight: 500; cursor: pointer; border-radius: 0; transition: all 0.15s; border-left: 2px solid var(--green);"><span style="font-size: 1rem; width: 18px; text-align: center;">📖</span> Subjects</a>
       <a class="nav-item" id="adminMgmtNav" href="admin-admins.html" style="display: none; align-items: center; gap: 0.65rem; padding: 0.5rem 1rem; color: var(--text-muted); font-size: 0.84rem; font-weight: 500; cursor: pointer; border-radius: 0; transition: all 0.15s; border-left: 2px solid transparent;"><span style="font-size: 1rem; width: 18px; text-align: center;">👑</span> Admin Management</a>
       <div style="height: 1px; background: var(--border); margin: 0.5rem 0;"></div>
       <div class="nav-section-label">Account</div>
@@ -137,39 +142,39 @@
     <!-- Main Content -->
     <div class="main">
       <div class="page-header">
-        <h1>Course Management</h1>
-        <p>Create and manage courses</p>
+        <h1>Subject Management</h1>
+        <p>Create and manage subjects</p>
       </div>
 
       <div class="card">
         <div class="search-bar">
           <input type="text" class="search-input" id="searchInput" placeholder="Search by name...">
-          <button class="btn btn-primary" onclick="openAddCourseModal()">➕ Add Course</button>
+          <button class="btn btn-primary" onclick="openAddSubjectModal()">➕ Add Subject</button>
         </div>
 
-        <div id="coursesContainer">
-          <div class="empty-state">Loading courses...</div>
+        <div id="subjectsContainer">
+          <div class="empty-state">Loading subjects...</div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Add/Edit Course Modal -->
-  <div class="modal-overlay" id="courseModal">
+  <!-- Add/Edit Subject Modal -->
+  <div class="modal-overlay" id="subjectModal">
     <div class="modal">
-      <button class="modal-close" onclick="closeCourseModal()">✕</button>
-      <div class="modal-title" id="courseModalTitle">Add New Course</div>
+      <button class="modal-close" onclick="closeSubjectModal()">✕</button>
+      <div class="modal-title" id="subjectModalTitle">Add New Subject</div>
 
-      <form id="courseForm" onsubmit="handleSaveCourse(event)">
+      <form id="subjectForm" onsubmit="handleSaveSubject(event)">
         <div class="form-group">
-          <label>Course Name *</label>
-          <input type="text" id="courseName" required>
+          <label>Subject Name *</label>
+          <input type="text" id="subjectName" required>
         </div>
 
         <div class="form-group">
-          <label>Subject *</label>
-          <select id="courseSubject" required>
-            <option value="">-- Select a Subject --</option>
+          <label>Category *</label>
+          <select id="subjectCategory" required>
+            <option value="">-- Select a Category --</option>
             <option value="Quran">Quran Memorization</option>
             <option value="Hadith">Hadith</option>
             <option value="Fiqh">Fiqh</option>
@@ -183,105 +188,100 @@
 
         <div class="form-group">
           <label>Description</label>
-          <textarea id="courseDescription" rows="3" placeholder="Course description..."></textarea>
+          <textarea id="subjectDescription" rows="3" placeholder="Subject description..."></textarea>
         </div>
 
         <div class="form-group">
           <label>Teacher *</label>
-          <select id="courseTeacher" required>
+          <select id="subjectTeacher" required>
             <option value="">-- Select a Teacher --</option>
           </select>
         </div>
 
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" onclick="closeCourseModal()">Cancel</button>
-          <button type="submit" class="btn btn-primary">Save Course</button>
+          <button type="button" class="btn btn-secondary" onclick="closeSubjectModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Subject</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- View Course Detail Modal -->
-  <div class="modal-overlay" id="courseDetailModal">
+  <!-- View Subject Detail Modal -->
+  <div class="modal-overlay" id="subjectDetailModal">
     <div class="modal">
       <button class="modal-close" onclick="closeDetailModal()">✕</button>
-      <div class="modal-title">Course Details</div>
-      <div id="courseDetailContent" style="font-size: 0.84rem; line-height: 1.8;">
+      <div class="modal-title">Subject Details</div>
+      <div id="subjectDetailContent" style="font-size: 0.84rem; line-height: 1.8;">
         <!-- Populated dynamically -->
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="closeDetailModal()">Close</button>
-        <button class="btn btn-primary" onclick="editCurrentCourse()">Edit</button>
-        <button class="btn btn-danger" onclick="deleteCurrentCourse()">Delete</button>
+        <button class="btn btn-primary" onclick="editCurrentSubject()">Edit</button>
+        <button class="btn btn-danger" onclick="deleteCurrentSubject()">Delete</button>
       </div>
     </div>
   </div>
 
   <script src="script.js"></script>
   <script>
-    let currentCourseId = null;
-    let allCourses = [];
+    let currentSubjectId = null;
+    let allSubjects = [];
 
-    async function loadCourses() {
+    async function loadSubjects() {
       try {
         const res = await fetch('/api/admin/courses', {
           headers: { 'Accept': 'application/json' }
         });
         if (!res.ok) {
           if (res.status === 401) window.location.href = '/';
-          throw new Error('Failed to load courses');
+          throw new Error('Failed to load subjects');
         }
-        allCourses = await res.json();
-        renderCourses(allCourses);
+        allSubjects = await res.json();
+        renderSubjects(allSubjects);
       } catch (err) {
         console.error(err);
-        document.getElementById('coursesContainer').innerHTML = '<div class="empty-state">Error loading courses</div>';
+        document.getElementById('subjectsContainer').innerHTML = '<div class="empty-state">Error loading subjects</div>';
       }
     }
 
-    function renderCourses(courses) {
-      const container = document.getElementById('coursesContainer');
-      if (!courses.length) {
-        container.innerHTML = '<div class="empty-state">No courses found. Create your first course!</div>';
+    function renderSubjects(subjects) {
+      const container = document.getElementById('subjectsContainer');
+      if (!subjects.length) {
+        container.innerHTML = '<div class="empty-state">No subjects found. Create your first subject!</div>';
         return;
       }
       
-      container.innerHTML = '<div class="courses-grid">' + courses.map(c => `
-        <div class="course-card">
-          <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 0.5rem;">
-            <div style="flex: 1;">
-              <div class="course-name">${c.name}</div>
-              <span class="subject-badge">${c.subject}</span>
+      container.innerHTML = '<table class="subjects-table"><thead><tr><th>Subject Name</th><th>Category</th><th>Teacher</th><th>Students</th><th>Actions</th></tr></thead><tbody>' + subjects.map(s => `
+        <tr>
+          <td><span class="subject-name">${s.name}</span></td>
+          <td><span class="subject-badge">${s.subject}</span></td>
+          <td>${s.teacher?.name || 'Unassigned'}</td>
+          <td>${s.students?.length || 0}</td>
+          <td>
+            <div class="subject-actions">
+              <button class="action-btn primary" onclick="viewSubjectDetail('${s._id}')">📋 View</button>
+              <button class="action-btn danger" onclick="deleteSubject('${s._id}')">🗑 Delete</button>
             </div>
-          </div>
-          ${c.description ? `<div class="course-desc">${c.description}</div>` : ''}
-          <div class="course-stats">
-            <div class="course-stat">👨‍🏫 Teacher: ${c.teacher?.name || 'Unassigned'}</div>
-            <div class="course-stat">🧒 Students: ${c.students?.length || 0}</div>
-          </div>
-          <div class="course-actions" style="margin-top: 0.75rem;">
-            <button class="action-btn primary" onclick="viewCourseDetail('${c._id}')">📋 View</button>
-            <button class="action-btn danger" onclick="deleteCourse('${c._id}')">🗑 Delete</button>
-          </div>
-        </div>
-      `).join('') + '</div>';
+          </td>
+        </tr>
+      `).join('') + '</tbody></table>';
     }
 
     document.getElementById('searchInput').addEventListener('input', (e) => {
       const query = e.target.value.toLowerCase();
-      const filtered = allCourses.filter(c =>
-        c.name.toLowerCase().includes(query) ||
-        c.subject.toLowerCase().includes(query)
+      const filtered = allSubjects.filter(s =>
+        s.name.toLowerCase().includes(query) ||
+        s.subject.toLowerCase().includes(query)
       );
-      renderCourses(filtered);
+      renderSubjects(filtered);
     });
 
-    async function openAddCourseModal() {
-      currentCourseId = null;
-      document.getElementById('courseModalTitle').textContent = 'Add New Course';
-      document.getElementById('courseForm').reset();
+    async function openAddSubjectModal() {
+      currentSubjectId = null;
+      document.getElementById('subjectModalTitle').textContent = 'Add New Subject';
+      document.getElementById('subjectForm').reset();
       await loadTeachers();
-      document.getElementById('courseModal').classList.add('open');
+      document.getElementById('subjectModal').classList.add('open');
     }
 
     async function loadTeachers() {
@@ -290,7 +290,7 @@
         if (!res.ok) throw new Error('Failed to load teachers');
         const users = await res.json();
         const teachers = users.filter(u => u.role === 'staff');
-        const select = document.getElementById('courseTeacher');
+        const select = document.getElementById('subjectTeacher');
         const currentValue = select.value;
         select.innerHTML = '<option value="">-- Select a Teacher --</option>' +
           teachers.map(t => `<option value="${t._id}">${t.name}</option>`).join('');
@@ -300,141 +300,141 @@
       }
     }
 
-    function closeCourseModal() {
-      document.getElementById('courseModal').classList.remove('open');
-      document.getElementById('courseForm').reset();
-      currentCourseId = null;
+    function closeSubjectModal() {
+      document.getElementById('subjectModal').classList.remove('open');
+      document.getElementById('subjectForm').reset();
+      currentSubjectId = null;
     }
 
-    async function handleSaveCourse(event) {
+    async function handleSaveSubject(event) {
       event.preventDefault();
 
-      const courseData = {
-        name: document.getElementById('courseName').value,
-        subject: document.getElementById('courseSubject').value,
-        description: document.getElementById('courseDescription').value,
-        teacher: document.getElementById('courseTeacher').value
+      const subjectData = {
+        name: document.getElementById('subjectName').value,
+        subject: document.getElementById('subjectCategory').value,
+        description: document.getElementById('subjectDescription').value,
+        teacher: document.getElementById('subjectTeacher').value
       };
 
       try {
         let url = '/api/admin/courses';
         let method = 'POST';
 
-        if (currentCourseId) {
-          url = `/api/admin/courses/${currentCourseId}`;
+        if (currentSubjectId) {
+          url = `/api/admin/courses/${currentSubjectId}`;
           method = 'PUT';
         }
 
         const res = await fetch(url, {
           method,
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(courseData)
+          body: JSON.stringify(subjectData)
         });
 
         if (!res.ok) {
           const error = await res.json();
-          throw new Error(error.error || 'Failed to save course');
+          throw new Error(error.error || 'Failed to save subject');
         }
 
-        closeCourseModal();
-        await loadCourses();
-        alert('Course saved successfully!');
+        closeSubjectModal();
+        await loadSubjects();
+        alert('Subject saved successfully!');
       } catch (err) {
         console.error(err);
-        alert('Error saving course: ' + err.message);
+        alert('Error saving subject: ' + err.message);
       }
     }
 
-    async function editCourse(courseId) {
+    async function editSubject(subjectId) {
       try {
-        const res = await fetch(`/api/admin/courses/${courseId}`);
-        if (!res.ok) throw new Error('Failed to load course');
-        const course = await res.json();
-        currentCourseId = courseId;
+        const res = await fetch(`/api/admin/courses/${subjectId}`);
+        if (!res.ok) throw new Error('Failed to load subject');
+        const subject = await res.json();
+        currentSubjectId = subjectId;
 
-        document.getElementById('courseModalTitle').textContent = 'Edit Course';
-        document.getElementById('courseName').value = course.name;
-        document.getElementById('courseSubject').value = course.subject || '';
-        document.getElementById('courseDescription').value = course.description || '';
+        document.getElementById('subjectModalTitle').textContent = 'Edit Subject';
+        document.getElementById('subjectName').value = subject.name;
+        document.getElementById('subjectCategory').value = subject.subject || '';
+        document.getElementById('subjectDescription').value = subject.description || '';
         
         await loadTeachers();
-        document.getElementById('courseTeacher').value = course.teacher?._id || '';
+        document.getElementById('subjectTeacher').value = subject.teacher?._id || '';
 
-        document.getElementById('courseModal').classList.add('open');
+        document.getElementById('subjectModal').classList.add('open');
       } catch (err) {
         console.error(err);
-        alert('Error loading course for edit');
+        alert('Error loading subject for edit');
       }
     }
 
-    async function viewCourseDetail(courseId) {
+    async function viewSubjectDetail(subjectId) {
       try {
-        const res = await fetch(`/api/admin/courses/${courseId}`);
-        if (!res.ok) throw new Error('Failed to load course');
-        const course = await res.json();
-        currentCourseId = courseId;
+        const res = await fetch(`/api/admin/courses/${subjectId}`);
+        if (!res.ok) throw new Error('Failed to load subject');
+        const subject = await res.json();
+        currentSubjectId = subjectId;
 
         const detail = `
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
             <div>
-              <strong>Course Name:</strong> ${course.name}<br>
-              <strong>Subject:</strong> ${course.subject || 'N/A'}<br>
-              <strong>Teacher:</strong> ${course.teacher?.name || 'Unassigned'}
+              <strong>Subject Name:</strong> ${subject.name}<br>
+              <strong>Category:</strong> ${subject.subject || 'N/A'}<br>
+              <strong>Teacher:</strong> ${subject.teacher?.name || 'Unassigned'}
             </div>
             <div>
-              <strong>Students:</strong> ${course.students?.length || 0}<br>
-              <strong>Assignments:</strong> ${course.assignments?.length || 0}<br>
-              <strong>Announcements:</strong> ${course.announcements?.length || 0}
+              <strong>Students:</strong> ${subject.students?.length || 0}<br>
+              <strong>Assignments:</strong> ${subject.assignments?.length || 0}<br>
+              <strong>Announcements:</strong> ${subject.announcements?.length || 0}
             </div>
           </div>
           <div style="margin-top: 1rem; border-top: 1px solid var(--border); padding-top: 1rem;">
             <strong style="display: block; margin-bottom: 0.5rem;">Description:</strong>
-            <p>${course.description || 'No description provided'}</p>
+            <p>${subject.description || 'No description provided'}</p>
           </div>
         `;
 
-        document.getElementById('courseDetailContent').innerHTML = detail;
-        document.getElementById('courseDetailModal').classList.add('open');
+        document.getElementById('subjectDetailContent').innerHTML = detail;
+        document.getElementById('subjectDetailModal').classList.add('open');
       } catch (err) {
         console.error(err);
-        alert('Error loading course details');
+        alert('Error loading subject details');
       }
     }
 
     function closeDetailModal() {
-      document.getElementById('courseDetailModal').classList.remove('open');
+      document.getElementById('subjectDetailModal').classList.remove('open');
     }
 
-    function editCurrentCourse() {
-      if (currentCourseId) {
+    function editCurrentSubject() {
+      if (currentSubjectId) {
         closeDetailModal();
-        editCourse(currentCourseId);
+        editSubject(currentSubjectId);
       }
     }
 
-    function deleteCurrentCourse() {
-      if (currentCourseId) {
+    function deleteCurrentSubject() {
+      if (currentSubjectId) {
         closeDetailModal();
-        deleteCourse(currentCourseId);
+        deleteSubject(currentSubjectId);
       }
     }
 
-    async function deleteCourse(courseId) {
-      if (!confirm('Are you sure you want to delete this course? This action cannot be undone.')) return;
+    async function deleteSubject(subjectId) {
+      if (!confirm('Are you sure you want to delete this subject? This action cannot be undone.')) return;
 
       try {
-        const res = await fetch(`/api/admin/courses/${courseId}`, { method: 'DELETE' });
-        if (!res.ok) throw new Error('Failed to delete course');
-        await loadCourses();
-        alert('Course deleted successfully!');
+        const res = await fetch(`/api/admin/courses/${subjectId}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Failed to delete subject');
+        await loadSubjects();
+        alert('Subject deleted successfully!');
       } catch (err) {
         console.error(err);
-        alert('Error deleting course');
+        alert('Error deleting subject');
       }
     }
 
     // Initialize
-    loadCourses();
+    loadSubjects();
     initializeRoleBasedNav('admin');
   </script>
 </body>

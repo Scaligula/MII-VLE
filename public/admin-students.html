@@ -114,7 +114,7 @@
       <a class="nav-item" href="admin-dashboard.html" style="display: flex; align-items: center; gap: 0.65rem; padding: 0.5rem 1rem; color: var(--text-muted); font-size: 0.84rem; font-weight: 500; cursor: pointer; border-radius: 0; transition: all 0.15s; border-left: 2px solid transparent;"><span style="font-size: 1rem; width: 18px; text-align: center;">⊞</span> Dashboard</a>
       <a class="nav-item" href="admin-users.html" style="display: flex; align-items: center; gap: 0.65rem; padding: 0.5rem 1rem; color: var(--text-muted); font-size: 0.84rem; font-weight: 500; cursor: pointer; border-radius: 0; transition: all 0.15s; border-left: 2px solid transparent;"><span style="font-size: 1rem; width: 18px; text-align: center;">👥</span> User Management</a>
       <a class="nav-item active" href="admin-students.html" style="display: flex; align-items: center; gap: 0.65rem; padding: 0.5rem 1rem; background: var(--green-dim); color: #8ecf8e; font-size: 0.84rem; font-weight: 500; cursor: pointer; border-radius: 0; transition: all 0.15s; border-left: 2px solid var(--green);"><span style="font-size: 1rem; width: 18px; text-align: center;">🧒</span> Students</a>
-      <a class="nav-item" href="admin-courses.html" style="display: flex; align-items: center; gap: 0.65rem; padding: 0.5rem 1rem; color: var(--text-muted); font-size: 0.84rem; font-weight: 500; cursor: pointer; border-radius: 0; transition: all 0.15s; border-left: 2px solid transparent;"><span style="font-size: 1rem; width: 18px; text-align: center;">📖</span> Courses</a>
+      <a class="nav-item" href="admin-courses.html" style="display: flex; align-items: center; gap: 0.65rem; padding: 0.5rem 1rem; color: var(--text-muted); font-size: 0.84rem; font-weight: 500; cursor: pointer; border-radius: 0; transition: all 0.15s; border-left: 2px solid transparent;"><span style="font-size: 1rem; width: 18px; text-align: center;">📖</span> Subjects</a>
       <a class="nav-item" id="adminMgmtNav" href="admin-admins.html" style="display: none; align-items: center; gap: 0.65rem; padding: 0.5rem 1rem; color: var(--text-muted); font-size: 0.84rem; font-weight: 500; cursor: pointer; border-radius: 0; transition: all 0.15s; border-left: 2px solid transparent;"><span style="font-size: 1rem; width: 18px; text-align: center;">👑</span> Admin Management</a>
       <div style="height: 1px; background: var(--border); margin: 0.5rem 0;"></div>
       <div class="nav-section-label">Account</div>
@@ -141,7 +141,7 @@
             <tr>
               <th>Name</th>
               <th>Email</th>
-              <th>Enrolled Courses</th>
+              <th>Enrolled Subjects</th>
               <th>Grade</th>
               <th>Actions</th>
             </tr>
@@ -283,7 +283,7 @@
         
         // Populate course dropdown
         const courseSelect = document.getElementById('course');
-        courseSelect.innerHTML = '<option value="">-- Select a Course --</option>';
+        courseSelect.innerHTML = '<option value="">-- Select a Subject --</option>';
         allCourses.forEach(course => {
           const option = document.createElement('option');
           option.value = course._id;
@@ -291,7 +291,7 @@
           courseSelect.appendChild(option);
         });
       } catch (err) {
-        console.error('Error loading courses:', err);
+        console.error('Error loading subjects:', err);
       }
     }
 
@@ -322,7 +322,7 @@
         <tr>
           <td><span class="student-name" onclick="viewStudentDetail('${s._id}')">${s.name}</span></td>
           <td>${s.email}</td>
-          <td>${s.enrolledCourses?.length || 0} course(s)</td>
+          <td>${s.enrolledCourses?.length || 0} subject(s)</td>
           <td>${s.grades?.length > 0 ? s.grades[0].grade : 'N/A'}</td>
           <td class="action-cell">
             <button class="action-btn primary" onclick="viewStudentDetail('${s._id}')">📋 View</button>
@@ -345,7 +345,7 @@
       currentStudentId = null;
       document.getElementById('studentModalTitle').textContent = 'Add New Student';
       document.getElementById('studentForm').reset();
-      loadCourses(); // Load courses when opening modal
+      loadCourses(); // Load subjects when opening modal
       document.getElementById('studentModal').classList.add('open');
     }
 
@@ -488,7 +488,7 @@
         document.getElementById('studentId').value = student.studentId;
         document.getElementById('grade').value = student.grade;
 
-        // Load courses and set the selected one
+        // Load subjects and set the selected one
         await loadCourses();
         const courseSelect = document.getElementById('course');
         // Find the course ID by name

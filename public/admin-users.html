@@ -125,7 +125,7 @@
     <a class="nav-item" href="admin-dashboard.html"><span class="nav-icon">⊞</span> Dashboard</a>
     <a class="nav-item active" href="admin-users.html"><span class="nav-icon">👥</span> User Management</a>
     <a class="nav-item" href="admin-students.html"><span class="nav-icon">🧒</span> Students</a>
-    <a class="nav-item" href="admin-courses.html"><span class="nav-icon">📖</span> Courses</a>
+    <a class="nav-item" href="admin-courses.html"><span class="nav-icon">📖</span> Subjects</a>
     <a class="nav-item" id="adminMgmtNav" href="admin-admins.html" style="display: none;"><span class="nav-icon">👑</span> Admin Management</a>
     <div class="nav-divider"></div>
     <div class="nav-section-label">Account</div>
@@ -167,7 +167,7 @@
               <tr>
                 <th>Student</th>
                 <th>Email</th>
-                <th>Enrolled Courses</th>
+                <th>Enrolled Subjects</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -192,7 +192,7 @@
               <tr>
                 <th>Faculty</th>
                 <th>Email</th>
-                <th>Teaching Courses</th>
+                <th>Teaching Subjects</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -232,12 +232,12 @@
   </main>
 </div>
 
-<!-- ===== ASSIGN STUDENT COURSES MODAL ===== -->
+<!-- ===== ASSIGN STUDENT SUBJECTS MODAL ===== -->
 <div class="modal-overlay" id="assignStudentModal">
   <div class="modal">
     <button class="modal-close" onclick="closeModal('assignStudentModal')">✕</button>
-    <div class="modal-title">Assign Courses — <span id="assignStudentName"></span></div>
-    <div class="text-xs text-muted mb-1">Select courses to enroll this student in:</div>
+    <div class="modal-title">Assign Subjects — <span id="assignStudentName"></span></div>
+    <div class="text-xs text-muted mb-1">Select subjects to enroll this student in:</div>
     <div id="assignStudentCourseList"></div>
     <div class="modal-footer">
       <button class="btn btn-ghost btn-sm" onclick="closeModal('assignStudentModal')">Cancel</button>
@@ -246,12 +246,12 @@
   </div>
 </div>
 
-<!-- ===== ASSIGN FACULTY COURSES MODAL ===== -->
+<!-- ===== ASSIGN FACULTY SUBJECTS MODAL ===== -->
 <div class="modal-overlay" id="assignFacultyModal">
   <div class="modal">
     <button class="modal-close" onclick="closeModal('assignFacultyModal')">✕</button>
-    <div class="modal-title">Assign Teaching Courses — <span id="assignFacultyName"></span></div>
-    <div class="text-xs text-muted mb-1">Select courses where this faculty member will be the teacher:</div>
+    <div class="modal-title">Assign Teaching Subjects — <span id="assignFacultyName"></span></div>
+    <div class="text-xs text-muted mb-1">Select subjects where this faculty member will be the teacher:</div>
     <div id="assignFacultyCourseList"></div>
     <div class="modal-footer">
       <button class="btn btn-ghost btn-sm" onclick="closeModal('assignFacultyModal')">Cancel</button>
