@@ -7,8 +7,8 @@ const userSchema = new mongoose.Schema({
   birthday: { type: Date },
   profilePicture: { type: String },
   language: { type: String, enum: ['Arabic', 'English', 'Filipino'], default: 'English' },
-  enrolledCourses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }],
-  grades: [{ course: { type: mongoose.Schema.Types.ObjectId, ref: 'Course' }, subject: String, grade: String }],
+  enrolledCourses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Subject' }],
+  grades: [{ course: { type: mongoose.Schema.Types.ObjectId, ref: 'Subject' }, subject: String, grade: String }],
   progress: {
     islamic: { quran: Number, hadith: Number, fiqh: Number, arabic: Number },
     academic: { mathematics: Number, english: Number, science: Number }

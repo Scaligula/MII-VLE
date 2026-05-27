@@ -180,7 +180,7 @@ app.get('/api/user/:id/courses', async (req, res) => {
 
 app.get('/api/course/:id', async (req, res) => {
   try {
-    const Course = require('./models/Course');
+    const Course = require('./models/Subject');
     const course = await Course.findById(req.params.id)
       .populate('teacher')
       .populate('students')
@@ -194,7 +194,7 @@ app.get('/api/course/:id', async (req, res) => {
 
 app.get('/api/course/:id/assignments', async (req, res) => {
   try {
-    const Course = require('./models/Course');
+    const Course = require('./models/Subject');
     const course = await Course.findById(req.params.id).populate('assignments');
     res.json(course?.assignments || []);
   } catch (err) {
@@ -413,7 +413,7 @@ app.post('/api/admin/users/:id/reset', requireAdmin, async (req, res) => {
 // ===== Admin: Courses =====
 app.get('/api/admin/courses', requireAdmin, async (req, res) => {
   try {
-    const Course = require('./models/Course');
+    const Course = require('./models/Subject');
     const courses = await Course.find({}).populate('teacher', 'name').lean();
     res.json(courses);
   } catch (err) { res.status(500).json({ error: err.message }); }
@@ -421,7 +421,7 @@ app.get('/api/admin/courses', requireAdmin, async (req, res) => {
 
 app.get('/api/admin/courses/:id', requireAdmin, async (req, res) => {
   try {
-    const Course = require('./models/Course');
+    const Course = require('./models/Subject');
     const course = await Course.findById(req.params.id).populate('teacher', 'name');
     if (!course) return res.status(404).json({ error: 'Course not found' });
     res.json(course);
@@ -430,7 +430,7 @@ app.get('/api/admin/courses/:id', requireAdmin, async (req, res) => {
 
 app.post('/api/admin/courses', requireAdmin, async (req, res) => {
   try {
-    const Course = require('./models/Course');
+    const Course = require('./models/Subject');
     const { name, description, subject, grade, teacher } = req.body;
 
     if (!name) {
@@ -466,7 +466,7 @@ app.post('/api/admin/courses', requireAdmin, async (req, res) => {
 
 app.put('/api/admin/courses/:id', requireAdmin, async (req, res) => {
   try {
-    const Course = require('./models/Course');
+    const Course = require('./models/Subject');
     const allowed = ['name', 'description', 'subject', 'grade', 'teacher', 'students'];
     const update = {};
     for (const key of allowed) {
@@ -481,7 +481,7 @@ app.put('/api/admin/courses/:id', requireAdmin, async (req, res) => {
 
 app.delete('/api/admin/courses/:id', requireAdmin, async (req, res) => {
   try {
-    const Course = require('./models/Course');
+    const Course = require('./models/Subject');
     const course = await Course.findByIdAndDelete(req.params.id);
     if (!course) return res.status(404).json({ error: 'Course not found' });
     res.json({ success: true });
@@ -491,7 +491,7 @@ app.delete('/api/admin/courses/:id', requireAdmin, async (req, res) => {
 // ===== Admin: Analytics =====
 app.get('/api/admin/analytics', requireAdmin, async (req, res) => {
   try {
-    const Course = require('./models/Course');
+    const Course = require('./models/Subject');
     const [students, faculty, courses] = await Promise.all([
       User.find({ role: 'student', isDeleted: { $ne: true } }).select('name grades progress enrolledCourses').lean(),
       User.find({ role: 'staff', isDeleted: { $ne: true } }).select('name email').lean(),

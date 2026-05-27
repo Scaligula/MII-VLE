@@ -3,7 +3,7 @@ require('dotenv').config();
 
 const mongoose = require('mongoose');
 const User = require('./models/User');
-const Course = require('./models/Course');
+const Course = require('./models/Subject');
 
 const MONGODB_URI = process.env.MONGODB_URI;
 

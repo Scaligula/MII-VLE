@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const courseSchema = new mongoose.Schema({
+const subjectSchema = new mongoose.Schema({
   name: { type: String, required: true },
   description: String,
   subject: { type: String, enum: ['Aqeedah & Fiqh', 'Seerah & Hadith', 'Qur\'an Reading', 'Akhlaq', 'Arabic Language', 'Tawheed', 'Fiqh', 'Lugah', 'Khat Wa Imla', 'Hisab', 'Hadith', 'Qur\'an', 'Qawaed', 'Seerah', 'Qir\'ah', 'Tafseer', 'Tareeh', 'Imla', 'Ta\'beer', 'Mustalahol Hadith', 'Ulomol Qur\'an', 'Nahu', 'Faraidh', 'Usolot Tafseer', 'Ulomol Hadith', 'Usolol Fiqh', 'Tareehol Fiqh', 'Other'] },
@@ -13,4 +13,4 @@ const courseSchema = new mongoose.Schema({
   treeView: [{ title: String, children: [{ title: String, type: String, content: String }] }]
 }, { timestamps: true });
 
-module.exports = mongoose.model('Course', courseSchema);
+module.exports = mongoose.model('Subject', subjectSchema);
